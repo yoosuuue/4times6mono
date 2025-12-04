@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4times6 Mono Playground</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        /* 1. 폰트 패밀리 정의 */
+        @font-face {
+            font-family: 'MonoThin';
+            src: url('./4times6mono-Thin-COLR.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'MonoRegular';
+            src: url('./4times6mono-Regular-COLR.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'MonoBold';
+            src: url('./4times6mono-Bold-SVG.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'MonoColor';
+            src: url('./4times6mono-COLOR-SVG.ttf') format('truetype');
+        }
+
+        /* 2. 전체 스타일 */
+        body {
+            background-color: white;
+            color: black;
+            font-family: 'MonoRegular', sans-serif;
+            overflow: hidden;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* 3. 에디터 영역 */
+        #editor {
+            flex-grow: 1;
+            width: 100%;
+            padding: 40px;
+            box-sizing: border-box;
+            outline: none;
+            font-size: 40px; /* 기본 크기 */
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-all;
+            overflow-y: auto;
+            
+            /* 초기 폰트: Regular */
+            font-family: 'MonoRegular'; 
+        }
+
+        /* 플레이스홀더 */
+        #editor:empty:before {
+            content: 'try typing 4times6 mono';
+            color: #ccc;
+            pointer-events: none;
+        }
+
+        /* 4. 하단 플로팅 컨트롤 박스 (네 변의 색이 다른 박스) */
+        .control-box {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            
+            width: 300px;
+            background-color: white;
+            padding: 20px;
+            
+            /* 네 변의 색이 다른 2pt 테두리 */
+            border-top: 2px solid #FF623E;
+            border-right: 2px solid #3C8E77;
+            border-bottom: 2px solid #AE62B7;
+            border-left: 2px solid #746832;
+            
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        /* 현재 단계 표시 텍스트 (Color 폰트 사용) */
+        #font-label {
+            font-family: 'MonoColor', sans-serif;
+            font-size: 20px;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        /* 5. 커스텀 슬라이더 스타일 */
+        input[type=range] {
+            -webkit-appearance: none; 
+            width: 100%; 
+            background: transparent; 
+        }
+
+        /* 슬라이더 트랙 (바) - 색상: FFA31D */
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 2px;
+            cursor: pointer;
+            background: #FFA31D;
+            border-radius: 0;
+        }
+
+        /* 슬라이더 썸 (버튼) - 동적 색상 변경을 위해 CSS 변수 사용 */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: var(--thumb-color, #FFFA2D); /* 초기값: Regular 색상 */
+            cursor: pointer;
+            margin-top: -9px; /* 트랙 중앙 정렬 */
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.1); /* 살짝 그림자 */
+        }
+
+        /* 파이어폭스 지원 */
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 2px;
+            cursor: pointer;
+            background: #FFA31D;
+        }
+        input[type=range]::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border: none;
+            border-radius: 50%;
+            background: var(--thumb-color, #FFFA2D);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 텍스트 에디터 -->
+    <div id="editor" contenteditable="true" spellcheck="false"></div>
+
+    <!-- 하단 컨트롤 박스 -->
+    <div class="control-box">
+        <!-- 현재 폰트 종류 표시 (Color 폰트로 표시됨) -->
+        <div id="font-label">Regular</div>
+        
+        <!-- 
+            슬라이더 (4단계) 
+            0: Thin
+            1: Regular
+            2: Bold
+            3: Color
+        -->
+        <input type="range" id="font-slider" min="0" max="3" value="1" step="1">
+    </div>
+
+    <script>
+        const editor = document.getElementById('editor');
+        const slider = document.getElementById('font-slider');
+        const label = document.getElementById('font-label');
+        
+        // 단계별 설정값 (이름, 폰트패밀리명, 버튼 색상)
+        const steps = [
+            { name: 'Thin',    family: 'MonoThin',    color: '#72AF2D' },
+            { name: 'Regular', family: 'MonoRegular', color: '#FFFA2D' },
+            { name: 'Bold',    family: 'MonoBold',    color: '#EF3F54' },
+            { name: 'Color',   family: 'MonoColor',   color: '#34A5D6' }
+        ];
+
+        // 1. 슬라이더 변경 시 폰트 및 디자인 업데이트 함수
+        function updateFont() {
+            const index = parseInt(slider.value);
+            const currentStep = steps[index];
+
+            // 에디터 폰트 변경
+            editor.style.fontFamily = currentStep.family;
+            
+            // 라벨 텍스트 변경
+            label.textContent = currentStep.name;
+            
+            // 슬라이더 버튼 색상 변경 (CSS 변수 업데이트)
+            slider.style.setProperty('--thumb-color', currentStep.color);
+        }
+
+        // 2. 글자 깨짐 방지 (입력 필터링) 함수
+        // 영문, 숫자, 기본 문장부호가 아니면 ♥ (U+2665)로 대체
+        function filterInput(e) {
+            // 조합 중인 글자(한글 등)는 무시 (composition events)
+            if (e.isComposing) return;
+
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+            
+            const node = selection.focusNode;
+            // 텍스트 노드인 경우에만 처리
+            if (node.nodeType === 3) {
+                const text = node.nodeValue;
+                // 허용된 문자: 영문 대소문자(a-zA-Z), 숫자(0-9), 기본 특수문자
+                // 이 정규식에 포함되지 않는 문자는 ♥로 바꿈
+                // [^ ...] 는 '...가 아닌 것'을 의미
+                const regex = /[^a-zA-Z0-9\s`~!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g;
+
+                if (regex.test(text)) {
+                    // 현재 커서 위치 저장
+                    const range = selection.getRangeAt(0);
+                    const offset = range.startOffset;
+
+                    // 대체 실행
+                    const newText = text.replace(regex, '♥');
+                    node.nodeValue = newText;
+
+                    // 커서 위치 복구 (대체 후 커서가 튀는 것 방지)
+                    // (단순 구현을 위해 끝으로 이동하지 않고, 최대한 보정 시도)
+                    try {
+                        const newRange = document.createRange();
+                        newRange.setStart(node, Math.min(offset, newText.length));
+                        newRange.setEnd(node, Math.min(offset, newText.length));
+                        selection.removeAllRanges();
+                        selection.addRange(newRange);
+                    } catch (err) {
+                        // 범위 오류 발생 시 무시 (보통 입력 끝부분에서 발생)
+                    }
+                }
+            }
+        }
+
+        // 이벤트 리스너 등록
+        slider.addEventListener('input', updateFont);
+        
+        // 입력 시 실시간 필터링 (keyup, input 이벤트)
+        editor.addEventListener('input', filterInput);
+        
+        // 붙여넣기 시 서식 제거 및 필터링
+        editor.addEventListener('paste', (e) => {
+            e.preventDefault();
+            let text = (e.originalEvent || e).clipboardData.getData('text/plain');
+            
+            // 붙여넣는 텍스트도 하트로 변환
+            text = text.replace(/[^a-zA-Z0-9\s`~!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g, '♥');
+            
+            document.execCommand('insertText', false, text);
+        });
+
+        // 초기화 실행
+        updateFont();
+        editor.focus();
+    </script>
+</body>
+</html>
