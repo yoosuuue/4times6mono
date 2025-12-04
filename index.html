@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
-        /* 1. 폰트 패밀리 정의 */
+        /* 1. 폰트 파일 연결 (업로드한 파일명과 정확히 일치해야 함) */
         @font-face {
             font-family: 'MonoThin';
             src: url('4times6mono-Thin-COLR.ttf') format('truetype');
@@ -20,17 +20,18 @@
             font-family: 'MonoBold';
             src: url('4times6mono-Bold-SVG.ttf') format('truetype');
         }
-        /* 컬러 폰트 설정 */
         @font-face {
             font-family: 'MonoColor';
             src: url('4times6mono-COLOR-SVG.ttf') format('truetype');
+            /* 컬러 폰트 활성화 옵션 */
+            font-feature-settings: "calt" 1, "liga" 1, "clig" 1;
         }
 
-        /* 2. 전체 스타일 */
+        /* 2. 전체 페이지 스타일 */
         body {
-            background-color: white;
+            background-color: white; /* 배경 흰색 */
             color: black;
-            font-family: 'MonoRegular', sans-serif;
+            font-family: 'MonoRegular', monospace; /* 기본 폰트 */
             overflow: hidden;
             margin: 0;
             display: flex;
@@ -42,28 +43,23 @@
         #editor {
             flex-grow: 1;
             width: 100%;
+            height: 100%;
             padding: 40px;
             box-sizing: border-box;
             outline: none;
-            font-size: 40px; /* 기본 크기 */
-            line-height: 1.5;
+            
+            font-size: 30pt; /* 30pt 고정 */
+            line-height: 1.4;
             white-space: pre-wrap;
             word-break: break-all;
             overflow-y: auto;
-            
-            /* 초기 폰트: Regular */
-            font-family: 'MonoRegular';
-            
-            /* [중요] 컬러 폰트가 흑백으로 나올 때 강제 활성화 시도 */
-            font-feature-settings: "calt" 1, "liga" 1, "clig" 1; 
-            font-variant-ligatures: common-ligatures;
         }
 
-        /* 플레이스홀더 (불투명도 없이 완전 검정) */
+        /* 미리보기 텍스트 */
         #editor:empty:before {
             content: 'try typing 4times6 mono';
-            color: black; /* 완전 검정 */
-            opacity: 1;   /* 투명도 없음 */
+            color: black;
+            opacity: 1;
             pointer-events: none;
         }
 
@@ -76,9 +72,9 @@
             
             width: 300px;
             background-color: white;
-            padding: 20px;
+            padding: 20px 25px;
             
-            /* 네 변의 색이 다른 2pt 테두리 */
+            /* [요청하신 디자인] 네 변의 색이 다른 2pt 테두리 */
             border-top: 2px solid #FF623E;
             border-right: 2px solid #3C8E77;
             border-bottom: 2px solid #AE62B7;
@@ -91,73 +87,61 @@
             z-index: 100;
         }
 
-        /* 현재 단계 표시 텍스트 (항상 Color 폰트로 표시) */
+        /* 현재 폰트 이름 표시 (Color 폰트로 표시) */
         #font-label {
-            font-family: 'MonoColor', sans-serif; /* 라벨은 무조건 컬러 폰트 */
+            font-family: 'MonoColor', monospace;
             font-size: 24px;
             text-align: center;
             margin-bottom: 5px;
-            
-            /* 라벨도 컬러 강제 활성화 */
-            font-feature-settings: "calt" 1; 
         }
 
-        /* 5. 커스텀 슬라이더 스타일 */
+        /* 5. 슬라이더 스타일 */
         input[type=range] {
             -webkit-appearance: none; 
             width: 100%; 
             background: transparent; 
         }
 
-        /* 슬라이더 트랙 (바) - 색상: FFA31D */
+        /* 슬라이더 바 (Track) - #FFA31D */
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
             height: 2px;
             cursor: pointer;
             background: #FFA31D;
-            border-radius: 0;
+            border: none;
         }
 
-        /* 슬라이더 썸 (버튼) - 동적 색상 변경 */
+        /* 슬라이더 버튼 (Thumb) - 동적 색상 변경 + 검정 테두리 */
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
             height: 20px;
             width: 20px;
             border-radius: 50%;
-            background: var(--thumb-color, #FFFA2D);
+            background: var(--thumb-color, #FFFA2D); /* JS에서 변경됨 */
+            border: 1px solid black; /* 검은색 1pt 테두리 */
             cursor: pointer;
-            margin-top: -9px; /* 트랙 중앙 정렬 */
-            box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+            margin-top: -9px; /* 중앙 정렬 */
         }
 
         /* 파이어폭스 지원 */
         input[type=range]::-moz-range-track {
-            width: 100%;
-            height: 2px;
-            cursor: pointer;
-            background: #FFA31D;
+            width: 100%; height: 2px; background: #FFA31D; cursor: pointer;
         }
         input[type=range]::-moz-range-thumb {
-            height: 20px;
-            width: 20px;
-            border: none;
-            border-radius: 50%;
-            background: var(--thumb-color, #FFFA2D);
-            cursor: pointer;
+            height: 20px; width: 20px; border: 1px solid black;
+            border-radius: 50%; background: var(--thumb-color, #FFFA2D); cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <!-- 텍스트 에디터 -->
     <div id="editor" contenteditable="true" spellcheck="false"></div>
 
-    <!-- 하단 컨트롤 박스 -->
     <div class="control-box">
-        <!-- 현재 폰트 종류 표시 -->
+        <!-- 현재 단계 텍스트 (Color 폰트) -->
         <div id="font-label">Regular</div>
         
-        <!-- 슬라이더 (4단계) -->
+        <!-- 4단계 슬라이더 -->
         <input type="range" id="font-slider" min="0" max="3" value="1" step="1">
     </div>
 
@@ -166,7 +150,7 @@
         const slider = document.getElementById('font-slider');
         const label = document.getElementById('font-label');
         
-        // 단계별 설정값
+        // [설정] 단계별 정보 (이름, 폰트패밀리, 버튼 색상)
         const steps = [
             { name: 'Thin',    family: 'MonoThin',    color: '#72AF2D' },
             { name: 'Regular', family: 'MonoRegular', color: '#FFFA2D' },
@@ -178,63 +162,56 @@
             const index = parseInt(slider.value);
             const currentStep = steps[index];
 
-            // 에디터 폰트 변경
+            // 1. 에디터 폰트 변경
             editor.style.fontFamily = currentStep.family;
             
-            // 라벨 텍스트 변경
+            // 2. 라벨 텍스트 변경 (라벨은 항상 Color 폰트 유지)
             label.textContent = currentStep.name;
             
-            // 슬라이더 버튼 색상 변경
+            // 3. 슬라이더 버튼 색상 변경
             slider.style.setProperty('--thumb-color', currentStep.color);
         }
 
-        // 입력 필터링 (한글 등 지원하지 않는 문자는 ♥로 변환)
+        // [글자 깨짐 방지] 영문/숫자/기호 외에는 하트(♥)로 변환
         function filterInput(e) {
-            // 조합 중(한글 입력 중)이면 무시하다가 조합이 끝나면 처리
+            // 한글 조합 중일 때는 간섭하지 않음 (단, 이 폰트는 한글이 없으므로 입력 완료 후 변환됨)
             if (e.type === 'compositionstart') return;
-            
+
             const selection = window.getSelection();
             if (!selection.rangeCount) return;
-            
             const node = selection.focusNode;
-            
-            // 텍스트 노드인 경우
-            if (node.nodeType === 3) {
+
+            if (node.nodeType === 3) { // 텍스트 노드일 때
                 const text = node.nodeValue;
-                // 허용 범위: 영어, 숫자, 기본 특수문자, 공백
+                // 허용: 영어 대소문자, 숫자, 공백, 기본 특수문자
+                // 차단: 한글 등 그 외 모든 문자 -> ♥ (U+2665)
                 const regex = /[^a-zA-Z0-9\s`~!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g;
 
                 if (regex.test(text)) {
-                    // 현재 커서 위치 저장
                     const range = selection.getRangeAt(0);
                     const offset = range.startOffset;
 
-                    // 변환 실행 (지원 안 되는 문자 -> ♥)
-                    const newText = text.replace(regex, '♥'); // U+2665
+                    // 변환
+                    const newText = text.replace(regex, '♥');
                     node.nodeValue = newText;
 
-                    // 커서 위치 복구 시도
+                    // 커서 위치 복구
                     try {
                         const newRange = document.createRange();
-                        // 텍스트 길이가 달라지지 않으므로(1글자->1글자) offset 유지 가능
                         newRange.setStart(node, Math.min(offset, newText.length));
                         newRange.setEnd(node, Math.min(offset, newText.length));
                         selection.removeAllRanges();
                         selection.addRange(newRange);
-                    } catch (err) {
-                        // pass
-                    }
+                    } catch (err) {}
                 }
             }
         }
 
-        // 이벤트 리스너
+        // 이벤트 연결
         slider.addEventListener('input', updateFont);
-        
-        // 입력 이벤트 (한글 입력 처리를 위해 input 이벤트 사용)
         editor.addEventListener('input', filterInput);
         
-        // 붙여넣기 시 서식 제거 및 필터링
+        // 붙여넣기 시 필터링
         editor.addEventListener('paste', (e) => {
             e.preventDefault();
             let text = (e.originalEvent || e).clipboardData.getData('text/plain');
